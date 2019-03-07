@@ -9,4 +9,4 @@ In brief, we introduce a new multiplexing approach using CellTag - a lentiviral-
 1. Single-cell transcriptome are collected and processed using 10x and CellRanger. CellTag count matrix can be extracted via previous demonstrated workflow - https://github.com/morris-lab/CellTagWorkflow or R package - CloneHunter:https://github.com/morris-lab/CloneHunter (Biddy et. al., Naure, 2018). 
 
 2. The CellTag count matrices are log-normalized (log2-based) as the following
-![alt text](https://github.com/morris-lab/CellTag-Classifier/tree/master/equation/Normalization.png)
+![](/equation/Normalization.png)
