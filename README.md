@@ -89,12 +89,14 @@ norm.ct.dge.2 <- normalize.function(ct.dge)
 #### Perform permutation sampling and dynamic CellTag detection
 Assuming balanced loading of cell number from two groups without overloading on the 10x machine, we expect a relatively low multiplet rate, suggesting most cells should have one or the other CellTag. In such case, each CellTag expression across all cells should have ~50% zero and the remaining as significantly expressed. This allows us to assume that CellTags' expression across cells would share similar density functions. Under this assumption, we will examine the significance of each CellTag expression, i.e. what is the likelihood of occurrence of each expression value.
 
-For each CellTag expression, we compute the density function *D* of its expression across all cells. Each cell's expression for each tag is then examined via a modified permutation test. In brief, for expression of a CellTag in a cell to be tested, we draw 1,000 samples from the density functions and calculate the proportion of samples that are greater than or equal to expression level at test. For instance, consider expression (*C<sub>ij</sub>*) of CellTag *j* in Cell *i*, we draw 1,000 sample *S* from the density of CellTag *j*, *D<sub>j</sub>*. The proportion was computed as shown below. This process is iterated for at least 50 times to make sure that the samples are representative of the overall density.
+For each CellTag expression, we compute the density function *D* of its expression across all cells. Each cell's expression for each tag is then examined via a modified permutation test. In brief, for expression of a CellTag in a cell to be tested, we draw 1,000 samples from the density functions and calculate the proportion of samples that are greater than or equal to expression level at test. If the proportion calculated is small, it indicates that it is unlikely to get an expression at such level suggesting relatively higher expression overall, which, we consider, as an identification signal. For instance, consider expression (*C<sub>ij</sub>*) of CellTag *j* in Cell *i*, we draw 1,000 sample *S* from the density of CellTag *j*, *D<sub>j</sub>*. The proportion was computed as shown below. This process is iterated for at least 50 times to make sure that the samples are representative of the overall density.
 <p align="center">
   <img src="/equation/permutation.png" height="72" width="140">
 </p>
 
 This function takes the normalized matrix, sample size and iteration number as inputs. It outputs the result in a list format. For each item in the list, there are two parts with the first part = Cell barcode and second part = data frame that contains proportion information from each CellTag and each iteration (sample) as below.
+
+**```result[[2]]``` for Cell *i* **
 
 ||CellTag 1|CellTag 2|\<More CellTags\>|CellTag N|
 |:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
@@ -106,4 +108,10 @@ This function takes the normalized matrix, sample size and iteration number as i
 ```r
 perc.ls <- dynamic.celltag.detection(norm.ct.dge.2)
 ```
+#### Binarization and Classificaiton
+In this step, we classify each cell to their corresponding CellTag based on the proportions calculated above. We first look for an overall minimum column in each proportion matrix. For instance, in the matrix below for Cell *i*, minimum of each row if calculated. If all minimums are coming from the same CellTag column, we identify such tag as one of the Cell *i*'s identities. On the other hand, if there are some mixing source of different CellTag columns, it is more likely to be a multiplet. Nevertheless, the uniqueness of minimum column does not eliminate the probability for the cell to be a multiplet as other CellTags could share similar level but slightly higher proportions. Hence, for cells with unique minimum column, we examine the pair-wise differences between the minimum tag and other tags. Using a difference cutoff of 0.238, we characterize the CellTag within less than 0.238 difference from the minimum tag to be another identity for the cell. This difference cutoff is obtained via benchmarking and training against the species mixing result based on 10x classification. In brief, we iterate through this function with different thresholds and calculate Cohen's Kappa score for the correspondence between CellTag and 10x classification. The difference that gives the optimal Kappa score is selected to be our base line threshold.
 
+This function takes the normalized matrix, proportion list, and the users' threshold. It outputs a data frame in the same structure as the normalized matrix but with 0 and 1, where 0 = not identified and 1 = identified.
+```r
+bin.class.ct <- binarization.classification(norm.ct.dge.2, perc.ls)
+```
