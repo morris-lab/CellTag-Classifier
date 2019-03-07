@@ -89,6 +89,21 @@ norm.ct.dge.2 <- normalize.function(ct.dge)
 #### Perform permutation sampling and dynamic CellTag detection
 Assuming balanced loading of cell number from two groups without overloading on the 10x machine, we expect a relatively low multiplet rate, suggesting most cells should have one or the other CellTag. In such case, each CellTag expression across all cells should have ~50% zero and the remaining as significantly expressed. This allows us to assume that CellTags' expression across cells would share similar density functions. Under this assumption, we will examine the significance of each CellTag expression, i.e. what is the likelihood of occurrence of each expression value.
 
-For each CellTag expression, we compute the density function *D* of its expression across all cells. Each cell's expression for each tag is then examined via a modified permutation test. In brief, for expression of a CellTag in a cell to be tested, we draw 1,000 samples from the density functions and calculate the proportion of samples that are greater than or equal to expression level at test. For instance, consider expression (*C<sub>ij</sub>*) of CellTag *j* in Cell *i*, we draw 1,000 sample *S* from the density of CellTag *j*, *D<sub>j</sub>*. The proportion was computed as shown below.
+For each CellTag expression, we compute the density function *D* of its expression across all cells. Each cell's expression for each tag is then examined via a modified permutation test. In brief, for expression of a CellTag in a cell to be tested, we draw 1,000 samples from the density functions and calculate the proportion of samples that are greater than or equal to expression level at test. For instance, consider expression (*C<sub>ij</sub>*) of CellTag *j* in Cell *i*, we draw 1,000 sample *S* from the density of CellTag *j*, *D<sub>j</sub>*. The proportion was computed as shown below. This process is iterated for at least 50 times to make sure that the samples are representative of the overall density.
+<p align="center">
+  <img src="/equation/permutation.png" height="72" width="140">
+</p>
 
+This function takes the normalized matrix, sample size and iteration number as inputs. It outputs the result in a list format. For each item in the list, there are two parts with the first part = Cell barcode and second part = data frame that contains proportion information from each CellTag and each iteration (sample) as below.
+
+||CellTag 1|CellTag 2|\<More CellTags\>|CellTag N|
+|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
+|1|*P<sub>11</sub>*|*P<sub>12</sub>*|...|*P<sub>1N</sub>*|
+|2|*P<sub>21</sub>*|*P<sub>22</sub>*|...|*P<sub>2N</sub>*|
+|...|...|...|...|...|
+|50|*P<sub>501</sub>*|*P<sub>502</sub>*|...|*P<sub>50N</sub>*|
+
+```r
+perc.ls <- dynamic.celltag.detection(norm.ct.dge.2)
+```
 
