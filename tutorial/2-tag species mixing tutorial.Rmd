@@ -1,0 +1,136 @@
+---
+title: "Classifier Tutorial"
+output: html_notebook
+---
+
+### Load the Source Code
+```{r}
+source("~/Desktop/Morris Lab/CellTag-Classifier/src/Classifier_Source.R")
+```
+
+### Load the Example Dataset (Before Starcode Collapsing) and Look at All CellTags
+```{r}
+# load celltag counts (before Starcode collapse)
+count.celltag <- read.csv("~/Desktop/Morris Lab/CellTag-Classifier/data/2-tag species mixing before collapsing.csv", header = TRUE, row.names=1)
+# all CellTags, pre-filtering
+all.celltags <- rowSums(count.celltag)
+hist(all.celltags, breaks = 50)
+```
+
+### Get the Starcode Collapsed Results and Collapse the CellTag Count Matrix
+#### Note: Please refer to here for more information about Starcode: https://github.com/gui11aume/starcode
+#### Options used for Starcode: -s --print-clusters
+```{r}
+# load starcode collapsed result
+starcode.out <- read.table("~/Desktop/Morris Lab/CellTag-Classifier/data/2-tag species mixing starcode result.txt", sep = "\t", stringsAsFactors=FALSE)
+
+# create a list to store consensus celltags for each centroid celltag
+consensus.lookup <- list()
+for (i in 1:nrow(starcode.out)) { # repeat for each row
+  centroid <- 0
+  # split consensus celltags separated by comma and populate list
+  centroid <- strsplit(starcode.out[i,3], ",")
+  names(centroid) <- starcode.out[i,1]
+  consensus.lookup[[i]] <- split(unname(centroid), names(centroid))
+}
+
+# create new matrix where each count.celltag column is renamed to its centroid CellTag
+count.celltag.collapsed <- as.data.frame(count.celltag)
+for (j in 1:ncol(count.celltag.collapsed)) {
+  n <- grep(colnames(count.celltag.collapsed[j]), consensus.lookup)
+  colnames(count.celltag.collapsed)[j] <- names(consensus.lookup[[n]])
+}
+
+# collapse count.celltag by consensus CellTags
+count.celltag.collapsed <- t(count.celltag.collapsed)
+count.celltag.collapsed <- by(count.celltag.collapsed, INDICES=row.names(count.celltag.collapsed), FUN=colSums)
+count.celltag.collapsed <- as.data.frame(do.call(cbind,count.celltag.collapsed))
+```
+
+### First Round of Normalization (Normalizing Between Cells)
+```{r}
+# Log the count matrix
+count.norm.expr <- log2(count.celltag.collapsed+1)
+ct.dge.norm <- t(count.norm.expr)
+rownames(ct.dge.norm) <- colnames(count.celltag.collapsed)
+colnames(ct.dge.norm) <- rownames(count.celltag.collapsed)
+# Normalize
+norm.ct.dge <- normalize.function(ct.dge.norm)
+```
+
+### Pull Out the Most Abundant CellTags
+```{r}
+count.norm.expr.t <- t(norm.ct.dge)
+
+# # pull out dge by 5 most abundant celltags
+ct.dge <- count.norm.expr.t[,c("TGCTATAT", "GTTGGCTA")]
+collapsed.orig.count <- count.celltag.collapsed[,c("TGCTATAT", "GTTGGCTA")]
+```
+
+### Second Round of Normalization (Normalizing Between CellTags)
+```{r}
+norm.ct.dge.2 <- normalize.function(ct.dge)
+```
+
+### Dynamic CellTag Detection
+```{r}
+perc.ls <- dynamic.celltag.detection(norm.ct.dge.2)
+```
+
+### Binarization and Classification
+```{r}
+bin.class.ct <- binarization.classification(norm.ct.dge.2, perc.ls)
+```
+
+### Check the Binary Result
+```{r}
+hist(rowSums(bin.class.ct))
+table(rowSums(bin.class.ct))
+```
+
+### CellTag Calling
+```{r}
+bin.class.ct <- multiplet.calling(bin.class.ct)
+# check results
+barplot(table(bin.class.ct$ct.call))
+```
+
+### Multiplet Secondary Check
+```{r}
+bin.class.ct <- multiplet.checkpoint(bin.class.ct, perc.ls, multiplet.table.path = "~/Desktop/Morris Lab/CellTag-Classifier/data/Expected Multiplet Rate.csv")
+```
+
+### Human/Mouse Assignment
+#### Note: convert celltag calls to human/mouse calls: pSmal B (GTTGGCTA) was mouse, all other tags were human
+```{r}
+mouse.human.tag <- data.frame(row.names = c("Mouse", "Human"), Tag = c("GTTGGCTA", "TGCTATAT"))
+bin.class.ct$ct.call.2 <- bin.class.ct$ct.call
+bin.class.ct[which(bin.class.ct$ct.call == mouse.human.tag["Mouse", "Tag"]),"ct.call.2"] <- "mouse"
+bin.class.ct[which(bin.class.ct$ct.call == mouse.human.tag["Human", "Tag"]),"ct.call.2"] <- "human"
+```
+
+### Compare CellTag Classification with 10x Results
+```{r}
+# load 10x classification of human, mouse, and doublet cells
+class.10x <- read.table("~/Desktop/Morris Lab/CellTag-Classifier/data/2-tag species mixing 10x gem_classification.csv", sep = ",", header = TRUE)
+rownames(class.10x) <- gsub('-.*$', "", class.10x$barcode)
+colnames(class.10x)[4] <- "10x.call"
+
+# remove nd cells and compare with 10x
+class.ct.filt <- subset(bin.class.ct, ct.call.2!="nd")
+class.10x.filt <- class.10x[row.names(class.ct.filt),]
+
+# creat composite of human and mouse classification, by 10x and CellTag
+classification <- merge(class.10x.filt$`10x.call`, class.ct.filt$ct.call.2, by=0)
+classification <- classification[,2:3]
+colnames(classification) <- c("10x", "CellTag")
+table(classification)
+```
+
+### Calculate Cohen's Kappa Score
+```{r}
+suppressMessages(library(psych))
+rslt <- cohen.kappa(matrix(table(classification), 3, 3))
+print(paste0("Cohen's Kappa Score = ", rslt$kappa))
+```
+
