@@ -155,7 +155,7 @@ class.ct.filt <- subset(bin.class.ct, ct.call.2!="nd")
 class.10x.filt <- class.10x[row.names(class.ct.filt),]
 
 # creat composite of human and mouse classification, by 10x and CellTag
-classification <- merge(class.10x.filt$`10x.call`, class.ct.filt$ct.call.2, by=0)
+classification <- merge(class.10x.filt[,"10x.call"], class.ct.filt$ct.call.2, by=0)
 classification <- classification[,2:3]
 colnames(classification) <- c("10x", "CellTag")
 table(classification)
