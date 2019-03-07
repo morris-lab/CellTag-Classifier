@@ -114,4 +114,58 @@ In this step, we classify each cell to their corresponding CellTag based on the 
 This function takes the normalized matrix, proportion list, and the users' threshold. It outputs a data frame in the same structure as the normalized matrix but with 0 and 1, where 0 = not identified and 1 = identified.
 ```r
 bin.class.ct <- binarization.classification(norm.ct.dge.2, perc.ls)
+# Check the binary result
+hist(rowSums(bin.class.ct))
+table(rowSums(bin.class.ct))
 ```
+
+#### Multiplet Calling based on Binarized Matrix
+We will call and label multiplets and singlets in the binary matrix with an additional column. 
+```r
+bin.class.ct <- multiplet.calling(bin.class.ct)
+# check results
+barplot(table(bin.class.ct$ct.call))
+```
+
+#### Optional Multiplet Checkpoint
+We notice the difference threshold selected is quite large. Hence, we implemented a secondary check on the multiplets by comparing our multiplet rate with the expected rate from 10x genomics. The table is located at data/Expected Multiplet Rate.csv. Briefly, we compare the multiplet number identified from our pipeline to the expected number. If the number is higher, all multiplets are pulled. The proportions and differences are gathered. By sorting the differences, the most likely occuring (smallest differences) multiplets were identified using a cutoff at the quantile of (1.5 * expected num/multiplet). The remaining cells were then characterized to their singlet identities.
+
+This function takes the binary matrix, proportion list and the path to the multiplet rate table.
+```r
+bin.class.ct <- multiplet.checkpoint(bin.class.ct, perc.ls, multiplet.table.path = "data/Expected Multiplet Rate.csv")
+```
+
+#### Compare with 10x classification
+We first call the species based on the CellTag information known in experimental design.
+```r
+mouse.human.tag <- data.frame(row.names = c("Mouse", "Human"), Tag = c("GTTGGCTA", "TGCTATAT"))
+bin.class.ct$ct.call.2 <- bin.class.ct$ct.call
+bin.class.ct[which(bin.class.ct$ct.call == mouse.human.tag["Mouse", "Tag"]),"ct.call.2"] <- "mouse"
+bin.class.ct[which(bin.class.ct$ct.call == mouse.human.tag["Human", "Tag"]),"ct.call.2"] <- "human"
+```
+Compare with the 10x classification result. It is located at data/2-tag species mixing 10x gem_classification.csv.
+```r
+# load 10x classification of human, mouse, and doublet cells
+class.10x <- read.table("data/2-tag species mixing 10x gem_classification.csv", sep = ",", header = TRUE)
+rownames(class.10x) <- gsub('-.*$', "", class.10x$barcode)
+colnames(class.10x)[4] <- "10x.call"
+
+# remove nd cells and compare with 10x
+class.ct.filt <- subset(bin.class.ct, ct.call.2!="nd")
+class.10x.filt <- class.10x[row.names(class.ct.filt),]
+
+# creat composite of human and mouse classification, by 10x and CellTag
+classification <- merge(class.10x.filt$`10x.call`, class.ct.filt$ct.call.2, by=0)
+classification <- classification[,2:3]
+colnames(classification) <- c("10x", "CellTag")
+table(classification)
+```
+
+Calculate Cohen's Kappa Score
+```r
+library(psych)
+rslt <- cohen.kappa(matrix(table(classification), 3, 3))
+print(paste0("Cohen's Kappa Score = ", rslt$kappa))
+```
+
+
