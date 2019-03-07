@@ -76,7 +76,7 @@ We identify the top two most abundant CellTags, which match with what we knew in
 count.norm.expr.t <- t(norm.ct.dge)
 sort(colSums(count.norm.expr.t))
 
-# # pull out dge by 5 most abundant celltags
+# pull out dge by 2 most abundant celltags
 ct.dge <- count.norm.expr.t[,c("TGCTATAT", "GTTGGCTA")]
 collapsed.orig.count <- count.celltag.collapsed[,c("TGCTATAT", "GTTGGCTA")]
 ```
@@ -87,6 +87,8 @@ norm.ct.dge.2 <- normalize.function(ct.dge)
 ```
 
 #### Perform permutation sampling and dynamic CellTag detection
+Assuming balanced loading of cell number from two groups without overloading on the 10x machine, we expect a relatively low multiplet rate, suggesting most cells should have one or the other CellTag. In such case, each CellTag expression across all cells should have ~50% zero and the remaining as significantly expressed. This allows us to assume that CellTags' expression across cells would share similar density functions. Under this assumption, we will examine the significance of each CellTag expression, i.e. what is the likelihood of occurrence of each expression value.
 
+For each CellTag expression, we compute the density function *D* of its expression across all cells. Each cell's expression for each tag is then examined via a modified permutation test. In brief, for expression of a CellTag in a cell to be tested, we draw 1,000 samples from the density functions and calculate the proportion of samples that are greater than or equal to expression level at test. For instance, consider expression (*C<sub>ij</sub>*) of CellTag *j* in Cell *i*, we draw 1,000 sample *S* from the density of CellTag *j*, *D<sub>j</sub>*. The proportion was computed as shown below.
 
 
