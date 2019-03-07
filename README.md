@@ -60,6 +60,7 @@ The CellTag count matrices are log-normalized (log2-based) as the following. We 
 <p align="center">
   <img src="/equation/Normalization.png" height="72" width="450">
 </p>
+
 ```r
 # Log the count matrix
 count.norm.expr <- log2(count.celltag.collapsed+1)
