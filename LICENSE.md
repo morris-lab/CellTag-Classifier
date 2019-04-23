@@ -4,11 +4,11 @@ This is a user agreement (“Agreement”) between You and The Washington Univer
 
 1.	WU hereby grants to You a non-exclusive, royalty-free license to use, copy, modify, merge, publish, and distribute the computer code provided here (the "Software"), specifically excluding commercial use or sales.  This license does not grant any rights or licenses to any other patents, copyrights, or other forms of intellectual property owned or controlled by WU. You agree to include this Agreement and the copyright notice below in all copies or substantial portions of the Software. 
 
-Copyright (c) 2018-2019 Washington University in St. Louis 
+	Copyright (c) 2018-2019 Washington University in St. Louis 
 
 2.	You may publish and present the results of any work resulting from use of the Software. You agree to acknowledge the contribution of the Software by citing the Software and its creators in all written publications concerning the use of the Software as follows:
 
-Guo, et al., Genome Biology (2019)
+	Guo, et al., Genome Biology (2019)
 
 3.	YOU AGREE THAT THE SOFTWARE PROVIDED HEREUNDER IS EXPERIMENTAL AND IS PROVIDED "AS IS", WITHOUT ANY WARRANTY OF ANY KIND, EXPRESSED OR IMPLIED, INCLUDING WITHOUT LIMITATION WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE, OR NON-INFRINGEMENT OF ANY THIRD-PARTY PATENT, COPYRIGHT, OR ANY OTHER THIRD-PARTY RIGHT. IN NO EVENT SHALL THE CREATORS OF THE SOFTWARE OR WU BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING OUT OF OR IN ANY WAY CONNECTED WITH THE SOFTWARE, THE USE OF THE SOFTWARE, OR THIS AGREEMENT, WHETHER IN BREACH OF CONTRACT, TORT OR OTHERWISE, EVEN IF SUCH PARTY IS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 
