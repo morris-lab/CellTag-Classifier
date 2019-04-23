@@ -1,4 +1,5 @@
 User Agreement
+
 This is a user agreement (“Agreement”) between You and The Washington University (“WU”) and governs Your use of the computer code provided here (the "Software").  “You” and “Your” means the individual or legal entity licensing the Software under this Agreement.
 
 1.	WU hereby grants to You a non-exclusive, royalty-free license to use, copy, modify, merge, publish, and distribute the computer code provided here (the "Software"), specifically excluding commercial use or sales.  This license does not grant any rights or licenses to any other patents, copyrights, or other forms of intellectual property owned or controlled by WU. You agree to include this Agreement and the copyright notice below in all copies or substantial portions of the Software. 
